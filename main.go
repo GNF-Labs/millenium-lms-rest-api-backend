@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/auth"
+	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
@@ -19,6 +20,11 @@ func main() {
 	var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 	if len(jwtKey) == 0 {
 		log.Fatalf("JWT_SECRET is not set in the environment variables")
+	}
+
+	databaseError := databases.Connect()
+	if databaseError != nil {
+		log.Fatalf("Could not connect to the database: %v", err)
 	}
 
 	fmt.Println("Environment variables loaded successfully")
