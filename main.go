@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/auth"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/gin-gonic/gin"
@@ -21,13 +20,12 @@ func main() {
 	if len(jwtKey) == 0 {
 		log.Fatalf("JWT_SECRET is not set in the environment variables")
 	}
-
+	log.Println("Environment variables loaded successfully")
 	databaseError := databases.Connect()
 	if databaseError != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
-
-	fmt.Println("Environment variables loaded successfully")
+	log.Println("Database connected successfully")
 
 	// run the gin router context
 	r := gin.Default()
