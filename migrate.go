@@ -1,6 +1,5 @@
 /* migrate.go */
 
-// Package databases is package that handle database things
 package main
 
 import (
@@ -26,7 +25,7 @@ func main() {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta",
 		*host, *port, *user, *password, *dbname)
 
-	log.Println("Try to connect to the database...")
+	log.Println("Trying to connect to the database...")
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -37,5 +36,5 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	fmt.Println("Migration complete")
+	log.Println("Migration complete")
 }

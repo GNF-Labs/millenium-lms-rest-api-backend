@@ -3,12 +3,15 @@ package main
 import (
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/auth"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
+	"github.com/GNF-Labs/millenium-lms-rest-api-backend/models"
+	"github.com/GNF-Labs/millenium-lms-rest-api-backend/utils"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
-	"strings"
+	"time"
 )
 
 func main() {
@@ -29,6 +32,17 @@ func main() {
 
 	// run the gin router context
 	r := gin.Default()
+
+	// enable CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // Allow all origins
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           24 * time.Hour,
+	}))
+
 	r.POST("/login", func(c *gin.Context) {
 		username := c.PostForm("username")
 		password := c.PostForm("password")
@@ -52,20 +66,13 @@ func main() {
 
 	r.GET("/hello", func(c *gin.Context) {
 		bearerToken := c.GetHeader("Authorization")
-		if bearerToken == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
-			return
-		}
-
-		splitToken := strings.Split(bearerToken, " ")
-		if len(splitToken) != 2 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
-			return
-		}
-
-		tokenString := splitToken[1]
-		claims, err := auth.VerifyJWT(jwtKey, tokenString)
+		tokenString, err := utils.ParseToken(bearerToken)
 		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			return
+		}
+		claims, verifyErr := auth.VerifyJWT(jwtKey, tokenString)
+		if verifyErr != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
@@ -76,6 +83,60 @@ func main() {
 		})
 	})
 
+	r.GET("/profile/:username", func(c *gin.Context) {
+		username := c.Param("username")
+		bearerToken := c.GetHeader("Authorization")
+		tokenString, err := utils.ParseToken(bearerToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			return
+		}
+		claims, verifyErr := auth.VerifyJWT(jwtKey, tokenString)
+		if verifyErr != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		// Verify that the token's username matches the requested profile
+		if claims.Username != username {
+			c.JSON(http.StatusForbidden, gin.H{"error": "you are not allowed to view this profile"})
+			return
+		}
+
+		var user models.User
+		if err := databases.DB.Where("username = ?", username).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		// Return the user profile
+		c.JSON(http.StatusOK, gin.H{
+			"id":        user.ID,
+			"username":  user.Username,
+			"full_name": user.FullName,
+			"email":     user.Email,
+			"about":     user.About,
+			"role":      user.Role,
+		})
+	})
+
+	r.GET("/verify-token", func(c *gin.Context) {
+		bearerToken := c.GetHeader("Authorization")
+		tokenString, err := utils.ParseToken(bearerToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			return
+		}
+		claims, verifyErr := auth.VerifyJWT(jwtKey, tokenString)
+		if verifyErr != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"username": claims.Username,
+			"token":    claims.RegisteredClaims,
+		})
+	})
 	err = r.Run("localhost:8080")
 	if err != nil {
 		log.Fatalf("Failed to start the server: %v", err)

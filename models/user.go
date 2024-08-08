@@ -2,13 +2,17 @@ package models
 
 import (
 	"gorm.io/gorm"
+	"time"
 )
 
 type User struct {
-	gorm.Model
-	Name  string  `gorm:"column:name;size:64;unique;not null"`
-	Email string  `gorm:"column:email;size:64;unique;not null"`
-	Age   uint8   `gorm:"column:age;not null"`
-	About *string `gorm:"column:about;type:text"`
-	Role  string  `gorm:"column:role;type:varchar(32);not null;check:role IN ('admin', 'student')"`
+	ID        uint   `gorm:"primarykey;auto_increment" json:"id"`
+	Username  string `gorm:"size:24;unique;not null;default:''" json:"username"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+	FullName  string         `gorm:"column:full_name;size:64;unique;not null;default:''" json:"full_name"`
+	Email     string         `gorm:"column:email;size:64;unique;not null" json:"email"`
+	About     string         `gorm:"column:about;type:text" json:"about"`
+	Role      string         `gorm:"column:role;type:varchar(32);not null;check:role IN ('admin', 'student')" json:"role"`
 }

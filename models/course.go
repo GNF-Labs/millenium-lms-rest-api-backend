@@ -6,10 +6,13 @@ import (
 )
 
 type Course struct {
-	gorm.Model
-	Name          string     `gorm:"column:name;type:varchar(64);not null"`
-	Description   string     `gorm:"column:about;type:text;not null"`
-	Categories    []Category `gorm:"many2many:course_category"`
-	TimeEstimated time.Time  `gorm:"column:time_estimated;type:timestamptz;not null"`
-	rating        float32    `gorm:"column:rating;type:float;not null"`
+	ID            uint `gorm:"primarykey;auto_increment" json:"id"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
+	Name          string         `gorm:"column:name;type:varchar(64);not null" json:"name"`
+	Description   string         `gorm:"column:about;type:text;not null;default:''" json:"description"`
+	Categories    []Category     `gorm:"many2many:course_category" json:"categories"`
+	TimeEstimated uint           `gorm:"column:time_estimated;not null" json:"time_estimated"`
+	Rating        float32        `gorm:"column:rating;type:float;not null;" json:"rating"`
 }

@@ -10,6 +10,7 @@ import (
 // Claims represents the JWT claims, which includes the username and registered claims.
 type Claims struct {
 	Username string `json:"username"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
