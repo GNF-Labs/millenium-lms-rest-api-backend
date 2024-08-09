@@ -15,4 +15,5 @@ type User struct {
 	Email     string         `gorm:"column:email;size:64;unique;not null" json:"email"`
 	About     string         `gorm:"column:about;type:text" json:"about"`
 	Role      string         `gorm:"column:role;type:varchar(32);not null;check:role IN ('admin', 'student')" json:"role"`
+	Password  string         `gorm:"column:password;size:255;not null;default:''" json:"password"`
 }
