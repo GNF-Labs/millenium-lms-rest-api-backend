@@ -16,4 +16,5 @@ type User struct {
 	About     string         `gorm:"column:about;type:text" json:"about"`
 	Role      string         `gorm:"column:role;type:varchar(32);not null;check:role IN ('admin', 'student')" json:"role"`
 	Password  string         `gorm:"column:password;size:255;not null;default:''" json:"password"`
+	ImageURL  string         `gorm:"column:image_url;" json:"image_url"`
 }

@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -74,9 +75,32 @@ func main() {
 		handlers.HandleProfile(c, jwtKey)
 	})
 
-	r.GET("/verify-token", func(c *gin.Context) {
+	r.PUT("/profile/:username", func(c *gin.Context) {
+		handlers.HandleUpdateProfile(c, jwtKey)
+	})
+
+	r.GET("/verify-token/:username", func(c *gin.Context) {
 		handlers.HandleVerifyToken(c, jwtKey)
 	})
+
+	r.PUT("/interact", func(c *gin.Context) {
+		handlers.HandleUserCourseInteractions(c, jwtKey)
+	})
+
+	// course endpoints
+	r.GET("/courses", func(c *gin.Context) {
+		pageStr := c.DefaultQuery("page", "1")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+			return
+		}
+		searchQuery := c.DefaultQuery("q", "")
+		handlers.GetCourses(c, page, searchQuery)
+	})
+	r.GET("/courses/:id", handlers.GetCourseById)
+
+	// run the server
 	err = r.Run("localhost:8080")
 	if err != nil {
 		log.Fatalf("Failed to start the server: %v", err)

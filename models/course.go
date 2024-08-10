@@ -11,7 +11,7 @@ type Course struct {
 	UpdatedAt     time.Time
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
 	Name          string         `gorm:"column:name;type:varchar(64);not null" json:"name"`
-	Description   string         `gorm:"column:about;type:text;not null;default:''" json:"description"`
+	Description   string         `gorm:"column:description;type:text;not null;default:''" json:"description"`
 	Categories    []Category     `gorm:"many2many:course_category" json:"categories"`
 	TimeEstimated uint           `gorm:"column:time_estimated;not null" json:"time_estimated"`
 	Rating        float32        `gorm:"column:rating;type:float;not null;" json:"rating"`
