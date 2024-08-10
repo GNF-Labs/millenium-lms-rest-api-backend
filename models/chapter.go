@@ -15,4 +15,5 @@ type Chapter struct {
 	NumberOfSub int            `gorm:"column:number_of_sub;not null" json:"number_of_sub"`
 	CourseID    uint           `gorm:"column:course_id;not null" json:"course_id"`
 	Course      Course         `gorm:"foreignKey:CourseID;references:ID" json:"course"`
+	Subchapters []Subchapter   `json:"subchapters"`
 }

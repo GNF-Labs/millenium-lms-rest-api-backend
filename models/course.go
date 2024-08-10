@@ -15,4 +15,5 @@ type Course struct {
 	Categories    []Category     `gorm:"many2many:course_category" json:"categories"`
 	TimeEstimated uint           `gorm:"column:time_estimated;not null" json:"time_estimated"`
 	Rating        float32        `gorm:"column:rating;type:float;not null;" json:"rating"`
+	Chapters      []Chapter      `json:"chapters"`
 }

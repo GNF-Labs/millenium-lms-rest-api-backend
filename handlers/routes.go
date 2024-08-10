@@ -319,10 +319,12 @@ func GetCourseById(c *gin.Context) {
 		return
 	}
 	var course models.Course
-	if err := databases.DB.Where("id = ?", id).First(&course).Error; err != nil {
+	if err := databases.DB.Preload("Chapters").First(&course, "courses.id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "course not found"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"course": course})
 }
+
+func GetChapters(c *gin.Context, courseId int) {}
