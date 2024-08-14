@@ -212,7 +212,7 @@ func HandleUpdateProfile(c *gin.Context, jwtKey []byte) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "profile updated successfully",
-		"user":    user,
+		"user":    userUpdate,
 	})
 }
 
