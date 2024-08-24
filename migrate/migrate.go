@@ -1,6 +1,6 @@
 /* migrate.go */
 
-package migrate
+package main
 
 import (
 	"flag"
