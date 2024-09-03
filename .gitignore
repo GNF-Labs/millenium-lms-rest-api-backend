@@ -26,3 +26,6 @@ _env
 # Go workspace file
 go.work
 go.work.sum
+
+# keys
+keys/
