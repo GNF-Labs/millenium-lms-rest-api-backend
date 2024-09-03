@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/GNF-Labs/millenium-lms-rest-api-backend/api"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/auth"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/handlers"
@@ -16,7 +17,8 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	var err error
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
@@ -30,6 +32,13 @@ func main() {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
 	log.Println("Database connected successfully")
+
+	err = api.InitGoogleStorageClient()
+	if err != nil {
+		log.Fatalf("Could not connect to Google: %v", err)
+	}
+
+	log.Println("Google Storage Client Initialized")
 
 	// run the gin router context
 	r := gin.Default()
