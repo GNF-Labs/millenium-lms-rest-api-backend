@@ -37,6 +37,7 @@ func HandleLogin(c *gin.Context, jwtKey []byte) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
+		"user_id":  user.ID,
 		"username": user.Username,
 		"token":    token,
 	})
