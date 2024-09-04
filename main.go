@@ -96,6 +96,10 @@ func main() {
 		handlers.HandleUserCourseInteractions(c, jwtKey)
 	})
 
+	r.GET("/interact/:username", func(c *gin.Context) {
+		handlers.GetUserCourseInteractions(c, jwtKey)
+	})
+
 	// course endpoints
 	r.GET("/courses", func(c *gin.Context) {
 		pageStr := c.DefaultQuery("page", "1")
@@ -108,6 +112,10 @@ func main() {
 		handlers.GetCourses(c, page, searchQuery)
 	})
 	r.GET("/courses/:id", handlers.GetCourseById)
+
+	r.GET("/dashboard/:username", func(c *gin.Context) {
+		handlers.HandleDashboard(c, jwtKey)
+	})
 
 	// run the server
 	err = r.Run("localhost:8080")

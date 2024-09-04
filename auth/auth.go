@@ -27,7 +27,7 @@ type Claims struct {
 //   - A string representing the signed JWT.
 //   - An error if there is an issue generating the token.
 func GenerateJWT(jwtKey []byte, username string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(24 * 7 * time.Hour)
 	claims := &Claims{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{

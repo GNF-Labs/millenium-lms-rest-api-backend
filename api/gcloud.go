@@ -71,6 +71,7 @@ func AddImageToBucket(bucketName, objectName string, data []byte) (string, error
 	bucket := GoogleStorageClient.Bucket(bucketName)
 	obj := bucket.Object(objectName)
 	w := obj.NewWriter(GCloudContext)
+	w.ContentType = "image/jpeg"
 
 	defer func(w *storage.Writer) {
 		err := w.Close()

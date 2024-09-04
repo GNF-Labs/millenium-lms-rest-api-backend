@@ -8,6 +8,7 @@ import (
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/models"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/utils"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -80,18 +81,31 @@ func HandleUpdateProfile(c *gin.Context, jwtKey []byte) {
 	// Parse and validate form data
 	var userUpdate models.User
 	if err := c.ShouldBindJSON(&userUpdate); err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request data"})
 		return
 	}
 
-	decodedImageBytes, err := utils.DecodeBase64ToBytes(userUpdate.ImageURL)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request data"})
+	if utils.IsURL(userUpdate.ImageURL) {
+		// If it's already a URL, skip decoding and use the existing URL
+		log.Println("Image URL detected, skipping decoding:", userUpdate.ImageURL)
+	} else {
+		// Otherwise, assume it's a Base64-encoded string and decode it
+		decodedImageBytes, err := utils.DecodeBase64ToBytes(userUpdate.ImageURL)
+		if err != nil {
+			log.Println("Failed to decode image:", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid image data"})
+			return
+		}
+
+		// Upload the image to Google Cloud Storage
+		userUpdate.ImageURL, err = api.AddImageToBucket("millenium-apps-profile", fmt.Sprintf("profile/%v", username), decodedImageBytes)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload image"})
+			return
+		}
 	}
 
-	userUpdate.ImageURL, err = api.AddImageToBucket("millenium-apps-profile", fmt.Sprintf("profile/%v", username), decodedImageBytes)
-
-	// Update the user's profile
 	if err := databases.DB.Model(&models.User{}).Where("username = ?", username).Updates(&userUpdate).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user"})
 		return
