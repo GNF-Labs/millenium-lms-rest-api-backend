@@ -1,0 +1,5 @@
+runtime: go122
+services:
+  - name: backend-app
+    ports:
+      - 8080

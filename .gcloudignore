@@ -1,0 +1,12 @@
+.idea/
+.git/
+.vscode/
+tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
