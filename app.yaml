@@ -1,5 +1,12 @@
 runtime: go122
-services:
-  - name: backend-app
-    ports:
-      - 8080
+
+service: backend-app
+
+automatic_scaling:  # Optional: Configure auto-scaling
+  min_instances: 1
+  max_instances: 5
+
+handlers:
+  - url: /.*
+    script: auto  # Use "auto" to automatically handle requests
+    secure: always
