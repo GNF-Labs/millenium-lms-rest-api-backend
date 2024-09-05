@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
-	"fmt"
 )
 
 type RequestBody struct {
@@ -31,9 +31,9 @@ func GetChapterDetail(c *gin.Context) {
 
 	var chapter models.Chapter
 	if err = databases.DB.
-	Preload("Subchapters", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id, name, chapter_id") // Select only necessary columns for subchapters
-	}).Preload("Course", func(db *gorm.DB) *gorm.DB {
+		Preload("Subchapters", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, name, chapter_id") // Select only necessary columns for subchapters
+		}).Preload("Course", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id, name") // Select only necessary columns for subchapters
 	}).
 		Joins("JOIN courses ON courses.id = chapters.course_id").
@@ -49,8 +49,15 @@ func GetChapterDetail(c *gin.Context) {
 		return
 	}
 
-
 	c.JSON(http.StatusOK, gin.H{"message": "Data retrieved", "data": chapter})
+}
+
+type SubchapterResponse struct {
+	models.Subchapter
+	ChapterID   uint   `json:"chapter_id"`
+	ChapterName string `json:"chapter_name"`
+	CourseID    uint   `json:"course_id"`
+	CourseName  string `json:"course_name"`
 }
 
 func GetSubchaptersFromChapter(c *gin.Context) {
@@ -59,13 +66,14 @@ func GetSubchaptersFromChapter(c *gin.Context) {
 	subchapterIdStr := c.Param("subchapter_id")
 
 	fmt.Println(courseIdStr)
-	// courseId, err := strconv.Atoi(courseIdStr)
-	// if err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
-	// 	return
-	// }
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
+		return
+	}
 
 	chapterId, err := strconv.Atoi(chapterIdStr)
+	fmt.Println(chapterId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chapter id"})
 		return
@@ -77,23 +85,15 @@ func GetSubchaptersFromChapter(c *gin.Context) {
 		return
 	}
 
-	var subchapter models.Subchapter
-	if err = databases.DB.
+	var result SubchapterResponse
+	err = databases.DB.Table("subchapters").
+		Select("subchapters.*, chapters.id as chapter_id, chapters.name as chapter_name, courses.id as course_id, courses.name as course_name").
 		Joins("JOIN chapters ON chapters.id = subchapters.chapter_id").
-		Where("subchapters.chapter_id = ? AND subchapters.id = ?", chapterId, subchapterId).
-		Select("subchapters.id, subchapters.name, chapters.id AS chapter_id, chapters.name AS chapter_name").
 		Joins("JOIN courses ON courses.id = chapters.course_id").
-		Select("courses.id AS course_id, courses.name AS course_name, chapters.id as chapter_id, chapters.name as chapter_name, subchapters.id, subchapters.name, subchapters.content, subchapters.order").
-		First(&subchapter).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Subchapter not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
-		return
-	}
+		Where("subchapters.id = ? AND chapters.id = ? AND courses.id = ?", subchapterId, chapterId, courseId).
+		First(&result).Error
 
-	c.JSON(http.StatusOK, gin.H{"message": "Data retrieved", "data": subchapter})
+	c.JSON(http.StatusOK, gin.H{"message": "Data retrieved", "data": result})
 
 }
 

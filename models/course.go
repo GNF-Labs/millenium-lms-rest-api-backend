@@ -29,7 +29,7 @@ type Course struct {
 	TimeEstimated uint           `gorm:"column:time_estimated;not null" json:"time_estimated"`
 	Rating        float32        `gorm:"column:rating;type:float;not null;" json:"rating"`
 	CategoryID    uint           `gorm:"column:category_id" json:"category_id"`
-	Chapters      []Chapter      `json:"chapters"`
+	Chapters      []Chapter      `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE;" json:"chapters"`
 
 	Category Category `gorm:"foreignKey:CategoryID;references:ID"`
 }
