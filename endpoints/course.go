@@ -16,8 +16,13 @@ func RegisterCourseRoutes(r *gin.Engine, jwtKey []byte) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
 			return
 		}
+
 		searchQuery := c.DefaultQuery("q", "")
 		handlers.GetCourses(c, page, searchQuery)
+	})
+
+	r.GET("/courses-collection", func(c *gin.Context) {
+		handlers.GetCoursesByIdCollection(c)
 	})
 	r.GET("/courses/:id", handlers.GetCourseById)
 
