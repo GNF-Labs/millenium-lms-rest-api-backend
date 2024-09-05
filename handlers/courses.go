@@ -125,3 +125,99 @@ func GetCoursesByIdCollection(c *gin.Context) {
 	// Respond with the retrieved courses
 	c.JSON(http.StatusOK, gin.H{"message": "Data retrieved", "data": courses})
 }
+
+func SetCompleted(c *gin.Context) {
+	userIdStr := c.Param("id")
+	if userIdStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No user id provided"})
+		return
+	}
+	userId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user id"})
+		return
+	}
+	subChapterId := c.Query("subchapter_id")
+	chapterId := c.Query("chapter_id")
+	courseId := c.Query("course_id")
+	if subChapterId == "" || chapterId == "" || courseId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	subChapterIdInt, err := strconv.Atoi(subChapterId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid subchapter id"})
+		return
+	}
+	chapterIdInt, err := strconv.Atoi(chapterId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chapter id"})
+		return
+	}
+	courseIdInt, err := strconv.Atoi(courseId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
+		return
+	}
+
+	// update in user progress
+	var userProgress models.UserProgress
+	err = databases.DB.Where("user_id = ? AND course_id = ? AND chapter_id = ? AND subchapter_id = ?",
+		userId, courseIdInt, chapterIdInt, subChapterIdInt).
+		First(&userProgress).
+		Update("completed", true).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User progress not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully Updated the data", "data": userProgress})
+}
+
+func CreateUserProgress(c *gin.Context, jwtKey []byte) {
+	username := c.Param("username")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Please provide valid username"})
+	}
+	var requestBody struct {
+		CourseID     int `json:"course_id"`
+		ChapterID    int `json:"chapter_id"`
+		SubchapterID int `json:"subchapter_id"`
+	}
+	var err error
+	if err = c.ShouldBindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	user, ok := CheckPermission(c, jwtKey, username)
+	if !ok {
+		return
+	}
+
+	var createdUserProgress models.UserProgress
+	err = databases.DB.Where("user_id = ? AND course_id = ? AND chapter_id = ? AND subchapter_id = ?",
+		user.ID, requestBody.CourseID, requestBody.ChapterID, requestBody.SubchapterID).Attrs(&models.UserProgress{
+		UserID:       int(user.ID),
+		CourseID:     requestBody.CourseID,
+		ChapterID:    requestBody.ChapterID,
+		SubchapterID: requestBody.SubchapterID,
+	}).
+		FirstOrCreate(createdUserProgress).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User progress not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully Created the data", "data": createdUserProgress})
+}

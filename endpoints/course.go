@@ -35,4 +35,12 @@ func RegisterCourseRoutes(r *gin.Engine, jwtKey []byte) {
 	r.GET("/courses/:id/:chapter_id/:subchapter_id", func(context *gin.Context) {
 		handlers.GetSubchaptersFromChapter(context)
 	})
+
+	r.PUT("/complete-progress/:id", func(c *gin.Context) {
+		handlers.SetCompleted(c)
+	})
+
+	r.POST("/user-progress/:username", func(c *gin.Context) {
+		handlers.CreateUserProgress(c, jwtKey)
+	})
 }
