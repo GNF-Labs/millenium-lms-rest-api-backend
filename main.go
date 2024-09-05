@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/GNF-Labs/millenium-lms-rest-api-backend/api"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/auth"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/handlers"
+	"github.com/GNF-Labs/millenium-lms-rest-api-backend/services"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -33,7 +33,7 @@ func main() {
 	}
 	log.Println("Database connected successfully")
 
-	err = api.InitGoogleStorageClient()
+	err = services.InitGoogleStorageClient()
 	if err != nil {
 		log.Fatalf("Could not connect to Google: %v", err)
 	}
@@ -115,6 +115,14 @@ func main() {
 
 	r.GET("/dashboard/:username", func(c *gin.Context) {
 		handlers.HandleDashboard(c, jwtKey)
+	})
+
+	r.GET("/courses/:id/:chapter_id", func(c *gin.Context) {
+		handlers.GetChapterDetail(c)
+	})
+
+	r.GET("/courses/:id/:chapter_id/:subchapter_id", func(context *gin.Context) {
+		handlers.GetSubchaptersFromChapter(context)
 	})
 
 	// run the server

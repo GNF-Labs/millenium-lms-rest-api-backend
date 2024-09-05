@@ -74,7 +74,7 @@ func HandleUserCourseInteractions(c *gin.Context, jwtKey []byte) {
 func GetUserCourseInteractions(c *gin.Context, jwtKey []byte) {
 	var err error
 	username := c.Param("username")
-	user, ok := checkPermission(c, jwtKey, username)
+	user, ok := CheckPermission(c, jwtKey, username)
 	if !ok {
 		return
 	}
@@ -132,42 +132,12 @@ func GetCourseById(c *gin.Context) {
 		return
 	}
 	var course models.Course
-	if err := databases.DB.Preload("Chapters").Preload("Category").First(&course, "courses.id = ?", id).Error; err != nil {
+	if err := databases.DB.Preload("Chapters", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id", "name")
+	}).Preload("Category").First(&course, "courses.id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"course": course})
 }
-
-func checkPermission(c *gin.Context, jwtKey []byte, username string) (*models.User, bool) {
-	bearerToken := c.GetHeader("Authorization")
-	tokenString, err := utils.ParseToken(bearerToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return nil, false
-	}
-
-	claims, verifyErr := auth.VerifyJWT(jwtKey, tokenString)
-	if verifyErr != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-		return nil, false
-	}
-
-	// Verify that the token's username matches the username in the request data
-	var user models.User
-	if err := databases.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-		return nil, false
-	}
-
-	if claims.Username != user.Username {
-		c.JSON(http.StatusForbidden, gin.H{"error": "you are not allowed to modify this data"})
-		return nil, false
-	}
-
-	return &user, true
-
-}
-
-func GetChapters(c *gin.Context, courseId int) {}

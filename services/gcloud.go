@@ -1,4 +1,4 @@
-package api
+package services
 
 import (
 	"cloud.google.com/go/storage"
@@ -31,38 +31,6 @@ func InitGoogleStorageClient() error {
 	return nil
 }
 
-//func GetImage(bucketName, objectName string) ([]byte, error) {
-//	if GoogleStorageClient == nil {
-//		return nil, fmt.Errorf("google storage client not initialized")
-//	}
-//
-//	// Get a handle to the bucket
-//	bucket := GoogleStorageClient.Bucket(bucketName)
-//
-//	// Get a handle to the object (image) within the bucket
-//	obj := bucket.Object(objectName)
-//
-//	// Read the object's content
-//	reader, err := obj.NewReader(GCloudContext)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to create reader for object %s: %v", objectName, err)
-//	}
-//	defer func(reader *storage.Reader) {
-//		err := reader.Close()
-//		if err != nil {
-//			log.Fatalf("failed to close reader for object %s: %v", objectName, err)
-//		}
-//	}(reader)
-//
-//	// Read all the data from the object
-//	data, err := io.ReadAll(reader)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to read object %s: %v", objectName, err)
-//	}
-//
-//	return data, nil
-//}
-
 func AddImageToBucket(bucketName, objectName string, data []byte) (string, error) {
 	if GoogleStorageClient == nil {
 		return "", fmt.Errorf("google storage client not initialized")
@@ -72,19 +40,20 @@ func AddImageToBucket(bucketName, objectName string, data []byte) (string, error
 	obj := bucket.Object(objectName)
 	w := obj.NewWriter(GCloudContext)
 	w.ContentType = "image/jpeg"
-
-	defer func(w *storage.Writer) {
-		err := w.Close()
-		if err != nil {
-			log.Printf("Error when closing the writer %v", err)
-		}
-	}(w)
-
+	w.CacheControl = "private"
+	// Write the image data to the object
 	if _, err := w.Write(data); err != nil {
 		return "", fmt.Errorf("failed to write object %s: %v", objectName, err)
 	}
-	var urlString = GetPublicURL(bucketName, objectName)
-	log.Printf("wrote object %s with URL %s", objectName, urlString)
+
+	// Close the writer to finalize the upload
+	if err := w.Close(); err != nil {
+		return "", fmt.Errorf("failed to close writer for object %s: %v", objectName, err)
+	}
+
+	// Get the public URL for the object
+	urlString := GetPublicURL(bucketName, objectName)
+	log.Printf("Wrote object %s with URL %s", objectName, urlString)
 	return urlString, nil
 }
 

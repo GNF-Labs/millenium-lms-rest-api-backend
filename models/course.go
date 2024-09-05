@@ -5,6 +5,20 @@ import (
 	"time"
 )
 
+type CourseDTO struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+type ChapterDTO struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+type SubchapterDTO struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
 type Course struct {
 	ID            uint `gorm:"primarykey;auto_increment" json:"id"`
 	CreatedAt     time.Time

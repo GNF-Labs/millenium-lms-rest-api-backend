@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/GNF-Labs/millenium-lms-rest-api-backend/api"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/auth"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/models"
+	"github.com/GNF-Labs/millenium-lms-rest-api-backend/services"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/utils"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -99,7 +99,7 @@ func HandleUpdateProfile(c *gin.Context, jwtKey []byte) {
 		}
 
 		// Upload the image to Google Cloud Storage
-		userUpdate.ImageURL, err = api.AddImageToBucket("millenium-apps-profile", fmt.Sprintf("profile/%v", username), decodedImageBytes)
+		userUpdate.ImageURL, err = services.AddImageToBucket("millenium-apps-profile", fmt.Sprintf("profile/%v", username), decodedImageBytes)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload image"})
 			return
