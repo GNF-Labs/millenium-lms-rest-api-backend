@@ -96,7 +96,33 @@ func GetCourses(c *gin.Context, page int, searchQuery string) {
 	// Apply the search filter if a search query is provided
 	query := databases.DB.Model(&models.Course{})
 	if searchQuery != "" {
-		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+searchQuery+"%", "%"+searchQuery+"%")
+		query = query.
+			Joins("LEFT JOIN categories ON courses.category_id = categories.id").
+			Where("name ILIKE ? OR description ILIKE ? OR categories.name ILIKE ?", "%"+searchQuery+"%", "%"+searchQuery+"%", "%"+searchQuery+"%")
+	}
+
+	category := c.Query("category")
+
+	if category != "" {
+		categoryInt, err := strconv.Atoi(category)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid category"})
+			return
+		}
+		query = query.Where("category_id = ?", categoryInt)
+	}
+
+	userIdStr := c.Query("user_id")
+	userId, err := strconv.Atoi(userIdStr)
+	if err == nil {
+		query = query.Joins("LEFT JOIN user_course_interactions ON courses.id = user_course_interactions.course_id").
+			Where("user_course_interactions.user_id = ? AND registered=TRUE", userId)
+	}
+
+	sort := c.Query("sort")
+	switch sort {
+	case "newest":
+		query = query.Order("courses.created_at DESC")
 	}
 
 	// Get the total count of records that match the query
