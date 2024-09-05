@@ -133,7 +133,7 @@ func GetCourseById(c *gin.Context) {
 	}
 	var course models.Course
 	if err := databases.DB.Preload("Category").Preload("Chapters", func(db *gorm.DB) *gorm.DB {
-		return db.Select("chapters.id, chapters.name, chapters.course_id").Joins("LEFT JOIN courses ON courses.id = chapters.course_id")
+		return db.Select("chapters.id, chapters.name, chapters.course_id, chapters.order").Joins("LEFT JOIN courses ON courses.id = chapters.course_id")
 	}).First(&course, "courses.id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
 		return

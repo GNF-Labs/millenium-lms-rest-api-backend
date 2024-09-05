@@ -32,14 +32,14 @@ func GetChapterDetail(c *gin.Context) {
 	var chapter models.Chapter
 	if err = databases.DB.
 		Preload("Subchapters", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, name, chapter_id") // Select only necessary columns for subchapters
+			return db.Select("id, name, chapter_id, subchapters.order") // Select only necessary columns for subchapters
 		}).Preload("Course", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id, name") // Select only necessary columns for subchapters
 	}).
 		Joins("JOIN courses ON courses.id = chapters.course_id").
 		Joins("LEFT JOIN subchapters ON subchapters.chapter_id = chapters.id").
 		Where("chapters.course_id = ? AND chapters.id = ?", courseId, chapterId).
-		Select("chapters.id, chapters.name, chapters.description, chapters.number_of_sub, chapters.order, courses.id as course_id, courses.name as course_name, subchapters.id as subchapter_id, subchapters.name as subchapter_name").
+		Select("chapters.id, chapters.name, chapters.description, chapters.number_of_sub, chapters.order, courses.id as course_id, courses.name as course_name, subchapters.id as subchapter_id, subchapters.name as subchapter_name, subchapters.order").
 		First(&chapter).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Chapter not found"})
