@@ -82,10 +82,37 @@ func GetUserCourseInteractions(c *gin.Context, jwtKey []byte) {
 	query := databases.DB.Model(&models.UserCourseInteraction{})
 
 	courseID := c.Query("course_id")
+	var interaction models.UserCourseInteraction
 	if courseID != "" {
-		query = query.Where("course_id = ?", courseID)
+		courseIDInt, err := strconv.Atoi(courseID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course id"})
+			return
+		}
+
+		query = query.Where("user_id = ? AND course_id = ?", user.ID, courseIDInt)
+		last := c.Query("last")
+		if last == "true" {
+			query = query.Order("last_interaction, updated_at, created_at desc").Limit(1)
+		}
+		// Use FirstOrCreate when course_id is provided
+		err = query.
+			FirstOrCreate(&interaction, models.UserCourseInteraction{
+				UserID:   user.ID,
+				CourseID: uint(courseIDInt),
+				// Set any default values for new records here, if needed
+			}).Error
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch or create interaction"})
+			return
+		}
+
+		// Return the single interaction if course_id is provided
+		c.JSON(http.StatusOK, gin.H{"interaction": interaction})
+		return
 	}
 
+	// If course_id is not provided, fetch all interactions for the user
 	var interactions []models.UserCourseInteraction
 	if err = query.Where("user_id = ?", user.ID).Find(&interactions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch interactions"})
