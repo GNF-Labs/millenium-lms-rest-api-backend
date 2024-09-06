@@ -79,13 +79,24 @@ func GetUserCourseInteractions(c *gin.Context, jwtKey []byte) {
 		return
 	}
 
+	query := databases.DB.Model(&models.UserCourseInteraction{})
+
+	courseID := c.Query("course_id")
+	if courseID != "" {
+		query = query.Where("course_id = ?", courseID)
+	}
+
 	var interactions []models.UserCourseInteraction
-	if err = databases.DB.Where("user_id = ?", user.ID).Find(&interactions).Error; err != nil {
+	if err = query.Where("user_id = ?", user.ID).Find(&interactions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch interactions"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"interactions": interactions})
+}
+
+func GetUserCourseInteractionByCourseID(c *gin.Context, jwtKey []byte) {
+
 }
 
 func GetCourses(c *gin.Context, page int, searchQuery string) {
