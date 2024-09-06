@@ -21,7 +21,7 @@ func RegisterCourseRoutes(r *gin.Engine, jwtKey []byte) {
 		handlers.GetCourses(c, page, searchQuery)
 	})
 
-	r.GET("/courses-collection", func(c *gin.Context) {
+	r.POST("/courses-collection", func(c *gin.Context) {
 		handlers.GetCoursesByIdCollection(c)
 	})
 	r.GET("/courses/:id", handlers.GetCourseById)
