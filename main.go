@@ -41,7 +41,7 @@ func main() {
 	endpoints.RegisterRoutes(r, jwtKey)
 
 	// run the server
-	err = r.Run("localhost:8080")
+	err = r.Run(":8080")
 	if err != nil {
 		log.Fatalf("Failed to start the server: %v", err)
 	}

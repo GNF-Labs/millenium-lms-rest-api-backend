@@ -30,6 +30,7 @@ type Course struct {
 	Rating        float32        `gorm:"column:rating;type:float;not null;" json:"rating"`
 	CategoryID    uint           `gorm:"column:category_id" json:"category_id"`
 	Chapters      []Chapter      `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE;" json:"chapters"`
+	ImageURL      string         `gorm:"column:image_url" json:"image_url"`
 
 	Category Category `gorm:"foreignKey:CategoryID;references:ID"`
 }
