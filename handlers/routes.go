@@ -98,7 +98,7 @@ func GetCourses(c *gin.Context, page int, searchQuery string) {
 	if searchQuery != "" {
 		query = query.
 			Joins("LEFT JOIN categories ON courses.category_id = categories.id").
-			Where("name ILIKE ? OR description ILIKE ? OR categories.name ILIKE ?", "%"+searchQuery+"%", "%"+searchQuery+"%", "%"+searchQuery+"%")
+			Where("courses.name ILIKE ? OR description ILIKE ? OR categories.name ILIKE ?", "%"+searchQuery+"%", "%"+searchQuery+"%", "%"+searchQuery+"%")
 	}
 
 	category := c.Query("category")
@@ -127,7 +127,7 @@ func GetCourses(c *gin.Context, page int, searchQuery string) {
 
 	// Get the total count of records that match the query
 	if err := query.Count(&totalRecords).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to count courses"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 

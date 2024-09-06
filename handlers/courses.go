@@ -137,35 +137,28 @@ func SetCompleted(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user id"})
 		return
 	}
-	subChapterId := c.Query("subchapter_id")
-	chapterId := c.Query("chapter_id")
-	courseId := c.Query("course_id")
-	if subChapterId == "" || chapterId == "" || courseId == "" {
+	var requestBody struct {
+		CourseID     int `json:"course_id"`
+		ChapterID    int `json:"chapter_id"`
+		SubchapterID int `json:"subchapter_id"`
+	}
+
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
 	}
-	subChapterIdInt, err := strconv.Atoi(subChapterId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid subchapter id"})
-		return
-	}
-	chapterIdInt, err := strconv.Atoi(chapterId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chapter id"})
-		return
-	}
-	courseIdInt, err := strconv.Atoi(courseId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course id"})
-		return
-	}
+	subChapterId := requestBody.SubchapterID
+	chapterId := requestBody.ChapterID
+	courseId := requestBody.CourseID
 
 	// update in user progress
 	var userProgress models.UserProgress
 	err = databases.DB.Where("user_id = ? AND course_id = ? AND chapter_id = ? AND subchapter_id = ?",
-		userId, courseIdInt, chapterIdInt, subChapterIdInt).
-		First(&userProgress).
-		Update("completed", true).Error
+		userId, courseId, chapterId, subChapterId).First(&userProgress).Error
+
+	// If the record is found, update the "completed" field
+	if err == nil {
+		err = databases.DB.Model(&userProgress).Update("completed", true).Error
+	}
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -208,7 +201,7 @@ func CreateUserProgress(c *gin.Context, jwtKey []byte) {
 		ChapterID:    requestBody.ChapterID,
 		SubchapterID: requestBody.SubchapterID,
 	}).
-		FirstOrCreate(createdUserProgress).Error
+		FirstOrCreate(&createdUserProgress).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
