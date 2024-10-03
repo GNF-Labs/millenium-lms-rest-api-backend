@@ -1,13 +1,14 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/endpoints"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"log"
-	"os"
 )
 
 func main() {
@@ -41,7 +42,7 @@ func main() {
 	endpoints.RegisterRoutes(r, jwtKey)
 
 	// run the server
-	err = r.Run(":8080")
+	err = r.Run("localhost:8080")
 	if err != nil {
 		log.Fatalf("Failed to start the server: %v", err)
 	}
