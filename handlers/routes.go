@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+	"strconv"
+
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/auth"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/models"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
-	"strconv"
 )
 
 func HandleUserCourseInteractions(c *gin.Context, jwtKey []byte) {
@@ -185,6 +186,28 @@ func GetCourses(c *gin.Context, page int, searchQuery string) {
 		"page_size":     pageSize,
 		"total_pages":   (totalRecords + int64(pageSize) - 1) / int64(pageSize),
 		"courses":       courses,
+	})
+
+}
+
+func GetOnDemandCourses(c *gin.Context) {
+	var courses []models.Course
+
+	if err := databases.DB.Table("user_course_interactions uci").
+		Select("c.*").
+		Joins("JOIN courses c ON uci.course_id = c.id").
+		Where("uci.registered = ?", true).
+		Group("c.id").
+		Order("COUNT(uci.course_id) DESC").
+		Limit(10).
+		Scan(&courses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	// Return the results
+	c.JSON(http.StatusOK, gin.H{
+		"courses": courses,
 	})
 
 }

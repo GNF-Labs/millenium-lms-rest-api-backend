@@ -1,10 +1,11 @@
 package endpoints
 
 import (
-	"github.com/GNF-Labs/millenium-lms-rest-api-backend/handlers"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/GNF-Labs/millenium-lms-rest-api-backend/handlers"
+	"github.com/gin-gonic/gin"
 )
 
 // RegisterCourseRoutes sets up the course-related routes
@@ -19,6 +20,10 @@ func RegisterCourseRoutes(r *gin.Engine, jwtKey []byte) {
 
 		searchQuery := c.DefaultQuery("q", "")
 		handlers.GetCourses(c, page, searchQuery)
+	})
+
+	r.GET("/courses-ondemand", func(c *gin.Context) {
+		handlers.GetOnDemandCourses(c)
 	})
 
 	r.POST("/courses-collection", func(c *gin.Context) {
