@@ -3,12 +3,13 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/databases"
 	"github.com/GNF-Labs/millenium-lms-rest-api-backend/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
-	"strconv"
 )
 
 type RequestBody struct {
@@ -116,7 +117,7 @@ func GetCoursesByIdCollection(c *gin.Context) {
 	var courses []models.Course
 	if err := databases.DB.
 		Where("id IN ?", requestBody.CoursesID).
-		Select("id", "name").
+		Select("id", "name", "image_url", "rating", "time_estimated").
 		Find(&courses).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
